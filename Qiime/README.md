@@ -2,7 +2,7 @@
 
 ## Qiime 16s rRNA Amplicon Pipeline parser
 
-    Usage: $USAGE
+    Usage: QimmeWrapper.sh [OPTIONS] -m metadata file
 
     Options:
         Required
@@ -17,7 +17,7 @@
                                 (Default folder: 00_Reads)
         -o|--output            Output Path for main Qiime output files (Default 01_Qiime/Process)
         -v|--viz               Output Path for Qiime visualisation files (Default 01_Qiime/Vizualisations)
-        -s|--stats             Output Path for Qiime statistical analyzes (Default $01_Qiime/stats)
+        -s|--stats             Output Path for Qiime statistical analyzes (Default 01_Qiime/stats)
         -d|--use_deblur        Use Deblur denoising algorith instead of Dada2
         -t|--taxonomy          
         -c|--classifier        Path to taxonomic reference file
