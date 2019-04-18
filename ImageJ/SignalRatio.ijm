@@ -5,6 +5,7 @@
  * Last updated 04/18/2019
  */
 
+macro "Signal Ratio"{
 #@ File (label = "Input directory", style = "directory") input
 #@ File (label = "Output directory", style = "directory") output
 #@ String (label = "File suffix", value = ".tif") suffix
@@ -37,7 +38,7 @@ function processFile(input, output, file) {
 	run("Set Measurements...", "area mean min limit display redirect=None decimal=3");
 	//Thresolding general signal of fluorescence
 	setAutoThreshold("Default dark");
-	setThreshold(8, 65535);
+	setThreshold(10, 65535);
 	run("Measure");
 	headings = split(String.getResultsHeadings);
 	areaGeneral=getResult(headings[1]);
@@ -45,7 +46,7 @@ function processFile(input, output, file) {
 	setResult("Type", j, "General");
 	updateResults();
 	//Thresholding Peak signal
-	setThreshold(40, 65535);
+	setThreshold(19, 65535);
 	run("Measure");
 	areaPeak=getResult(headings[1]);
 	j=nResults-1;
@@ -67,4 +68,4 @@ saveAs("Results", output+"/Results.csv");
 print("Saving results in: " +output+"/Results.csv");
 print("---")
 print("Macro done, have a nice day!");
-exit()
+exit()}
