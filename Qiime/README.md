@@ -1,7 +1,9 @@
 # Qiime related scripts
 
-## Qiime 16s rRNA Amplicon Pipeline parser
+## QimmeWrapper.sh
 
+It's a Qiime 16s rRNA Amplicon Pipeline wrapper
+````
     Usage: QimmeWrapper.sh [OPTIONS] -m metadata file
 
     Options:
@@ -30,3 +32,4 @@
         -st|--skip-taxonomy    Skip taxonomy classification
         -ss|--skip_ABDiversity Skip Alpha and Beta diversity analyzes
         -se|--skip-export      Skip export as biom file and conversion to csv
+````
