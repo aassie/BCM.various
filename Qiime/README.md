@@ -3,6 +3,14 @@
 ## QimmeWrapper.sh
 
 It's a Qiime 16s rRNA Amplicon Pipeline wrapper
+
+This script use 16S rRNA amplicon sequencing file from Illumina and assume you have followed the Earth Microbiome Sequencing project protocol ([link](http://www.earthmicrobiome.org/protocols-and-standards/16s/).
+
+**Requirement**
+
+- A text file tab delimited that will serve as metadata input for the analysis.
+- Assuming that you have three sequencing file they need to be placed in a input folder (Default 00_Reads), the file need to be renamed (or simlinked) as forward.fastq.gz reverse.fastq.gz and barcodes.fastq.gz.
+
 ````
     Usage: QimmeWrapper.sh [OPTIONS] -m metadata file
 
