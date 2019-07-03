@@ -4,7 +4,7 @@
 
 It's a Qiime 16s rRNA Amplicon Pipeline wrapper
 
-This script use 16S rRNA amplicon sequencing file from Illumina and assume you have followed the Earth Microbiome Sequencing project protocol ([link](http://www.earthmicrobiome.org/protocols-and-standards/16s/).
+This script use 16S rRNA amplicon sequencing file from Illumina and assume you have followed the Earth Microbiome Sequencing project protocol ([link](http://www.earthmicrobiome.org/protocols-and-standards/16s/ ).
 
 **Requirement**
 
