@@ -85,11 +85,12 @@ function QiimeLoad {
 # Demultiplex reads
 function QiimeDemux {
     qiime demux emp-paired \
-        --m-barcodes-file $METADATA \
-        --m-barcodes-column BarcodeSequence \
-        --i-seqs $OUTPUT/paired-end.qza \
-        --o-per-sample-sequences $OUTPUT/demux-paired-end.qza \
-        --p-rev-comp-mapping-barcodes
+         --m-barcodes-file $METADATA \
+         --m-barcodes-column BarcodeSequence \
+         --i-seqs $OUTPUT/paired-end.qza \
+         --o-per-sample-sequences $OUTPUT/demux-paired-end.qza \
+         --output-dir $OUTPUT/DemuxProc \
+         --p-rev-comp-mapping-barcodes
     Qcounter
 
     qiime demux summarize \
@@ -123,19 +124,21 @@ function QiimeClusterDaDa {
 
 # Denoise data and Cluster - Deblur
 function QiimeClusterDeblur {
+    qiime vsearch join-pairs \
+      --i-demultiplexed-seqs $OUTPUT/demux-paired-end.qza \
+      --o-joined-sequences $OUTPUT/demux-joined-end.qza
+
     qiime deblur denoise-16S \
-    --i-demultiplexed-seqs $OUTPUT/demux-paired-end.qza \
-    --p-trunc-len-f 250 \
-    --p-trunc-len-r 250 \
-    --o-representative-sequences $OUTPUT/rep-seqs.qza \
-    --o-table $OUTPUT/table.qza \
-    --o-denoising-stats deblurstats
-    Qcounter
+      --i-demultiplexed-seqs $OUTPUT/demux-joined-end.qza \
+      --p-trim-length 250 \
+      --o-representative-sequences $OUTPUT/rep-seqs.qza \
+      --o-table $OUTPUT/table.qza \
+      --o-stats $OUTPUT/deblurstats
 
     qiime feature-table summarize \
-        --i-table $OUTPUT/table.qza \
-        --o-visualization $VISFOL/table.qzv \
-        --m-sample-metadata-file $METADATA
+      --i-table $OUTPUT/table.qza \
+      --o-visualization $VISFOL/table.qzv \
+      --m-sample-metadata-file $METADATA
     Qcounter
 
     qiime feature-table tabulate-seqs \
