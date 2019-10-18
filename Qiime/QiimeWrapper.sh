@@ -21,7 +21,7 @@ function script_usage() {
         
         General:
         -h|--help              Displays this help
-        -i|--inputh            Path to folder only containing the following files:
+        -i|--input             Path to folder only containing the following files:
                                 -forward.fastq.gz
                                 -reverse.fastq.gz
                                 -barcodes.fastq.gz 
