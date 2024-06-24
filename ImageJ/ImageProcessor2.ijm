@@ -1,3 +1,11 @@
+/*
+ * Macro to compare measure signal in cell, nuclei and cytoplasm
+ * ----
+ * Adrien Assié
+ * Last updated 06/24/2024
+ */
+
+
 // Paranoid Cleanup
 run("Clear Results");
 if (roiManager("Count") > 0){
@@ -174,7 +182,7 @@ for (i=0; i<list.length; i++){
 	
 	//Cell Shape descriptors
 	if(isCellSelection != -1){
-		print(newTitle);
+		//print(newTitle);
 		selectImage(newTitle+"-"+cellChannel);
 		setThreshold(80, 65535, "raw");
 		run("Watershed");
