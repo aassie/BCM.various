@@ -5,9 +5,9 @@ Macro for batch processing files using [ImageJ](https://imagej.net/Welcome) or [
 
 ## SignalRatio.ijm
 
-This is a macro which will process a batch of single-channel fluorescent pictures and compare the specific fluorescence (intense values) to the overall general fluorescence.
+This is a macro that will process a batch of single-channel fluorescent pictures and compare the specific fluorescence (intense values) to the overall general fluorescence.
 
-The script goes as follow:
+The script goes as follows:
   1. Convert the color channel to 16bit
   2. (optional) Set a scale
   3. Get the total area of gray pixels using a low-intensity threshold value (get as much as fluorescence signal as possible)
@@ -66,6 +66,68 @@ You can run the script manually following these steps:
 6. Repeat the threshold adjustment to have only your positive (peak) signal 
 7. Click on `Analyze>Measurement` or press `command + m`
 8. Repeat for all images
-9. Once done you can export the result window by `left-click` and `Select all` then copy paste the result in an excel file.
+9. Once you've done this, you can export the result window by `left-clicking` and `Select all`, then copying and pasting the result into an Excel file.
 
 **Optional:** You don't want to select the whole image. In this case, you can use the lasso tool and select your Region of Interest before `Step 4`. 
+
+## ImageProcessor2.ijm
+
+Process a set of `nd2` pictures in a set folder. At the moment, the script assumes each picture has three channels: one with DAPI for nuclei detection, one called cell for detecting cell shape, and one called signal for the fluorescence of interest.
+
+The script goes as follows:
+1. Ask the user the folder to process
+2. Ask which channel is which
+3. Correct background fluorescence
+4. Split channel to individual pictures
+5. Process the nucleus channel to create a mask
+6. Process signal channel to create a mask
+7. If possible, create a cytoplasm mask by subtracting the nucleus channel to the whole cell one.
+8. Measure signal intensity for each channel
+9. Count cells by counting the number of nuclei on the respective channel
+10. Measure shape parameters with the cell channel, see detail below
+11. Print all results to a `results_file.csv`
+
+### In case of missing signal
+
+The script detects the presence or not of a signal and reports if something is missing in the `Note` column of the corresponding file in the `results_file.csv`. Please advise if you see the comment. Additionally, with a large number of overlapping cells, the value could be skewed and meaningless. Inspect the picture beforehand before considering using this value. Compare the `Cell Number (Nuclei)` and `Cell Number (Cell)` column counts, if there is a big discrepancy consider not taking account of shape value.
+
+### Shape parameters measurement
+
+Because treatment can affect cell shape, we measure a set of basic shape indicator with the cell channels. The parameters are:
+
+**Circularity:**
+
+Formula: $Circularity=(4𝜋×Area)/Perimeter^2$
+Range: 0 to 1
+Interpretation: A value of 1 indicates a perfect circle. Values closer to 0 indicate shapes that are less circular (more elongated or irregular).
+
+**Aspect Ratio (AR):**
+
+Formula: $Aspect Ratio=(Major Axis Length)/(Minor Axis Length)$
+Interpretation: The aspect ratio describes the ratio of the major axis to the minor axis of the best-fitting ellipse for the particle. Values greater than 1 indicate elongated shapes.
+
+**Roundness:**
+Formula: $Roundness=(4×Area)/(𝜋×Major Axis Length^2)$
+ 
+Interpretation: Similar to circularity but normalized by the major axis length. Higher values indicate rounder shapes.
+
+### Output
+
+The `results_file.csv` has the following columns:
+
+- `ID`: Image name
+- `Nucleus Area` : Area of all detected nuclei in pixel
+- `Nucleus Signal` : Average signal in the Nucleus area
+- `Whole Cell Area` : Area of all the detected cells in pixel
+- `Whole cell signal` : Average signal in the Nucleus area
+- `Cytoplasm Area` : Area of all the detected Cytoplasm in pixel
+- `Cytoplasm signal` : Average signal in the Cytoplasm area
+- `Cell Number (Nuclei)` : Number of cells based on Nuceli count
+- `Cell Number (Cells)` : Number of cells based on Cell channel count (less reliable)
+- `Mean Circularity` : Average Circularity value
+- `Mean AR` : Average Aspect Ratio value
+- `Mean Roundness` : Average Roundness value
+- `Note` : If an issue with signal detection happens, report it here.
+
+
+
