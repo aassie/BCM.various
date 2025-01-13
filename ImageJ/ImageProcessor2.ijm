@@ -1,8 +1,10 @@
 /*
- * Macro to compare measure signal in cell, nuclei and cytoplasm
+ * IMAGE PROCESSOR 
+ * v.0.3
+ * Macro to compare measure signal(s) in cell, nuclei, and cytoplasm
  * ----
  * Adrien Assié
- * Last updated 06/24/2024
+ * Last updated 09/30/2024
  */
 
 
@@ -13,42 +15,151 @@ if (roiManager("Count") > 0){
 	roiManager("Delete");
 }
 
-// Function for Channel selection
-function getChannelSelections() {
-    Dialog.create("Select Channels");
-    Dialog.addChoice("Nucleus Channel:", newArray("C1", "C2", "C3"), "C1");
-    Dialog.addChoice("Cell Background Channel:", newArray("C1", "C2", "C3"), "C2");
-    Dialog.addChoice("Signal Channel:", newArray("C1", "C2", "C3"), "C3");
-    Dialog.show();
+// Ask how many signal channels to measure
+Dialog.create("Input Number");
+Dialog.addNumber("Not counting nuclei and background channels,\nHow many signals to measure:", 1); // Set decimal places to 0 for integer input
+
+Dialog.show(); // Show the dialog for user input
+
+numSignals = Dialog.getNumber(); // Correct way to get the number after Dialog.show()
+
+print(numSignals);
+
+// Function to generate dynamic channel options
+function generateChannelOptions(numSignals) {
+    var totalChannels = 2 + numSignals; // Since you want it to start from C3
+    var channelsArray = newArray();
     
-    var nucleusChannel = Dialog.getChoice();
-    var cellChannel = Dialog.getChoice();
-    var signalChannel = Dialog.getChoice();
+    for (var i = 1; i <= totalChannels; i++) {
+        channelsArray[i-1] = "C" + i;
+    }
     
-    return newArray(nucleusChannel, cellChannel, signalChannel);
+    return channelsArray;
 }
+
+// Function for Channel selection
+function getChannelSelections(numSignals) {
+    channelOptions = generateChannelOptions(numSignals); // Create the dynamic array of channel options
+
+    Dialog.create("Select Channels");
+
+    // Add choices for Nucleus and Background Channels using the dynamically generated channel options
+    Dialog.addChoice("Nucleus Channel:", channelOptions, "C1");
+    Dialog.addChoice("Cell Background Channel:", channelOptions, "C2");
+
+    // Dynamically add choices for each signal channel based on the user input
+    for (var i = 0; i < numSignals; i++) {
+        Dialog.addChoice("Signal Channel " + (i + 1) + ":", channelOptions, "C"+(i+3));
+    }
+
+    Dialog.show(); // Show the dialog for channel selection
+
+    // Get Nucleus and Cell Background channels
+    nucleusChannel = Dialog.getChoice();
+    cellChannel = Dialog.getChoice();
+
+    // Get the selected signal channels and store them in an array
+    var signalChannels = newArray();
+    for (var i = 0; i < numSignals; i++) {
+        signalChannels[i] = Dialog.getChoice();
+    }
+
+    // Return the values as an array: the two individual channels plus the array of signal channels
+    tmparray=newArray(nucleusChannel, cellChannel);
+    returnArray = Array.concat(tmparray,signalChannels);
+
+    return returnArray; // Return the combined array
+}
+
+// Call the function and pass the number of signal channels to select
+selections = getChannelSelections(numSignals);
+nucleusChannel = replace(selections[0], "C", "000");
+cellChannel = replace(selections[1], "C", "000");
+
+//Debug
+Array.print(selections);
+
+// Handle multiple signal channels
+signalChannels =  newArray(numSignals);
+
+for (var i = 0; i < numSignals; i++) {
+    signalChannels[i] = replace(selections[i+2], "C", "000");
+}
+
+//Debug
+Array.print(signalChannels);
+
+// Print the channels for verification
+print("Nucleus Channel: " + nucleusChannel);
+print("Cell Background Channel: " + cellChannel);
+for (var i = 0; i < signalChannels.length; i++) {
+    print("Signal Channel " + (i + 1) + ": " + signalChannels[i]);
+}
+ 
+// generate table header
+header1 = "ID";
+// Handle multiple signal channels
+header2 =  newArray(numSignals*6);
+
+for (var i = 0; i < numSignals; i++) {
+    header2[6*i] = "Nucleus Signal - S"+ (i+1);
+    header2[6*i+1] = "Whole Cell Signal - S"+ (i+1);
+    header2[6*i+2] = "Cytoplasm Signal - S"+ (i+1);
+    header2[6*i+3] = "Signal Size in Nucelus - S"+ (i+1);
+    header2[6*i+4] = "Signal Size in Whole Cell - S"+ (i+1);
+    header2[6*i+5] = "Signal Size in Cytoplasm - S"+ (i+1);
+}
+
+header3="# Nuclei, #Cells,Mean Circularity,Mean AR,Mean Roundness,Note";
+
+// Convert the array into a comma-separated string
+header = "";
+
+for (i = 0; i < header2.length; i++) {
+    if (i == 0) {
+        header = header1 + "," + header2[i];  // No comma before the first element
+    } else {
+        header += "," + header2[i]; // Add comma before each subsequent element
+    }
+}
+header=header+","+header3;
+
+print(header);
 
 // Load file
 waitForUser("Please select the folder that contains your raw microscopy pictures");
 wait(500);
 RawInput = getDirectory("Please select the folder that contains your raw microscopy pictures");
-list = getFileList(RawInput);
-Soutput=RawInput+"Analysis_Output/";
+list = getFileList(RawInput);  // Get all files from the directory
+
+// Create an empty array to store only .nd2 files
+nd2Files = newArray();
+
+// Loop through the file list and filter .nd2 files
+for (i = 0; i < list.length; i++) {
+    if (endsWith(list[i], ".nd2")) {
+        // Add .nd2 files to the new array
+        nd2Files = Array.concat(nd2Files, list[i]);
+    }
+}
+
+// Output folder
+Soutput = RawInput + "Analysis_Output/";
 File.makeDirectory(Soutput);
-header = "ID,Nucleus Area, Nucleus Signal, Whole Cell Area, Whole cell signal, Cytoplasm Area, Cytoplasm signal, Cell Number (Nuclei),Cell Number (Cells),Mean Circularity,Mean AR,Mean Roundness,Note";
 
-//Channel selection
-selections = getChannelSelections();
-nucleusChannel = replace(selections[0],"C","000");
-cellChannel = replace(selections[1],"C","000");
-signalChannel = replace(selections[2],"C","000");
+// Print the filtered .nd2 files
+for (i = 0; i < nd2Files.length; i++) {
+    print(nd2Files[i]);
+}
 
+list=nd2Files;
 
 //Process files
 for (i=0; i<list.length; i++){
 	Note1="";
 	Note2="";
 	Note3="";
+	
 	//First set thresholds
 	run("Bio-Formats Importer", "open=" + RawInput + list[i] + " autoscale color_mode=Default view=Hyperstack stack_order=XYCZT");
 	
@@ -58,6 +169,7 @@ for (i=0; i<list.length; i++){
 	// Remove space in name
 	newTitle = replace(name, " ", "_");
 	rename(newTitle);
+	print(newTitle);
 	
 	//Normalize background and split channel
 	run("Subtract Background...", "rolling=50 stack");
@@ -78,14 +190,17 @@ for (i=0; i<list.length; i++){
 		roiManager("Rename", "Nucleus");
 		roiManager("Deselect");
 		isNucleusSelection=0;
+		print("Found nuclei");'
 	}else{
 		isNucleusSelection=-1;
 		Note1="No Nuclei detected";
+		print(Note1);
 	}
+	//print(isNucleusSelection);
 
 	//Process Cell channel
 	selectImage(newTitle+"-"+cellChannel);
-	setThreshold(80, 65535, "raw");
+	setThreshold(95, 65535, "raw");
 	run("Convert to Mask");
 	run("Despeckle");
 	//Clean noise further
@@ -97,46 +212,51 @@ for (i=0; i<list.length; i++){
 		roiManager("Select", roiManager("Count")-1);
 		roiManager("Rename", "Cells");
 		isCellSelection=0;
+	print("Found cell background");
 	}else{
 		isCellSelection=-1;
 		Note2=" No Cells detected";
+		print(Note2);
 	}
-	
-	selectImage(newTitle+"-"+signalChannel);
+	//print(isCellSelection);
 	if (roiManager("Count") ==2 ){
-		//Process signal channel
 		//create a cytoplasm section
+		print("Create a cytoplasm selection");
 		roiManager("Select", newArray(0,1));
 		roiManager("XOR");
 		roiManager("Add");
 		roiManager("Select", 2);
 		roiManager("Rename", "Cytoplasm");
-		roiManager("Select", newArray(0,1,2));
-		roiManager("Measure");
-
+	}
 	
-		meanInsideNucleus = getResult("Mean", 0);
-		areaInsideNucleus = getResult("Area", 0);
-		
-		meanWholeCell = getResult("Mean", 1);
-		areaWholeCell = getResult("Area", 1);
-		
-		meanCyto = getResult("Mean", 2);
-		areaCyto = getResult("Area", 2);
-	} else{
+	//Process signal channel
+	chanelmeasures=newArray(signalChannels.length*6);
+	for(c=0;c<signalChannels.length;c++){
+		selectImage(newTitle+"-"+signalChannels[c]);
+		//print(newTitle+"-"+signalChannels[c]);
 		if ((isNucleusSelection != -1) & (isCellSelection != -1)){
+			//print("Double section debug");
+			roiManager("Select", newArray(0,1,2));
+			roiManager("Measure");	
+			meanInsideNucleus = getResult("Mean", 0);
+			areaInsideNucleus = getResult("Area", 0);
 			
+			meanWholeCell = getResult("Mean", 1);
+			areaWholeCell = getResult("Area", 1);
+			
+			meanCyto = getResult("Mean", 2);
+			areaCyto = getResult("Area", 2);
+		} else if ((isNucleusSelection == -1) & (isCellSelection == -1)){
 			meanInsideNucleus = 0;
 			areaInsideNucleus = 0;
 			
 			meanWholeCell = 0;
 			areaWholeCell = 0;
-			
+				
 			meanCyto = 0;
 			areaCyto = 0;
 			Note3=" Nothing to measure";
-		}else{
-		if ((isNucleusSelection == -1) && (isCellSelection != -1)){
+		}else if ((isNucleusSelection == -1) && (isCellSelection != -1)){
 			roiManager("Select All");
 			roiManager("Measure");
 			meanInsideNucleus = 0;
@@ -149,8 +269,7 @@ for (i=0; i<list.length; i++){
 			areaCyto = 0;
 			
 			Note3=" No Nucleus to measure";
-		}else{
-		if ((isNucleusSelection != -1) && (isCellSelection == -1)){
+		}else if ((isNucleusSelection != -1) && (isCellSelection == -1)){
 			roiManager("Select All");
 			roiManager("Measure");
 			meanInsideNucleus = getResult("Mean", 0);
@@ -162,9 +281,23 @@ for (i=0; i<list.length; i++){
 			meanCyto = 0;
 			areaCyto = 0;
 			Note3=" No cell to measure";
+		}	
+		chanelmeasures[6*c] = meanInsideNucleus;
+	    chanelmeasures[6*c+1] = meanWholeCell;
+	    chanelmeasures[6*c+2] = meanCyto;
+	    chanelmeasures[6*c+3] = areaInsideNucleus;
+	    chanelmeasures[6*c+4] = areaWholeCell;
+	    chanelmeasures[6*c+5] = areaCyto;
+	    
+		//print(chanelmeasures[6*c+1]);
+		meanInsideNucleus = "";
+		areaInsideNucleus = "";
+		meanWholeCell = "";
+		areaWholeCell = "";
+		meanCyto = "";
+		areaCyto = "";
+		run("Clear Results");
 		}
-		}
-	}}
 	
 	roiManager("Select All");
 	roiManager("Delete");
@@ -178,6 +311,7 @@ for (i=0; i<list.length; i++){
 		nuccount=roiManager("count");
 		roiManager("Select All");
 		roiManager("Delete");
+		//print(nuccount);
 	}
 	
 	//Cell Shape descriptors
@@ -218,16 +352,26 @@ for (i=0; i<list.length; i++){
 	//Create result string
 	resultsFilePath = Soutput+File.separator+"results_file.csv";
 	Note=Note1+Note2+Note3;
-	results = newTitle+","+areaInsideNucleus + "," +meanInsideNucleus + "," + areaWholeCell+ "," + meanWholeCell+ "," +areaCyto+ "," +meanCyto+","+nuccount+","+cellcount+","+meanCircularity+","+meanAR+","+meanRound+","+Note;
+	
+	//Prep the values:
+	
+	// Convert the array into a comma-separated string
+	var channelArray = "";
+	for (k = 0; k < chanelmeasures.length; k++) {
+	    if (k == 0) {
+	        channelArray = ""+ chanelmeasures[k];  
+	    } else {
+	        channelArray += "," + chanelmeasures[k]; // Add comma before each subsequent element
+	    }
+	}
+	
+	// Concatenate the array values with the existing string
+	results = newTitle+","+ channelArray +","+nuccount+","+cellcount+","+meanCircularity+","+meanAR+","+meanRound+","+Note;
 	
 	//Variable cleanup
 	newTitle="";
-	areaInsideNucleus="";
-	meanInsideNucleus="";
-	areaWholeCell="";
-	meanWholeCell="";
-	areaCyto="";
-	meanCyto="";
+	channelArray="";
+	chanelmeasures="";
 	cellcount="";
 	Note1="";
 	Note2="";
@@ -251,3 +395,4 @@ for (i=0; i<list.length; i++){
 }
 
 waitForUser("Script is done");
+
